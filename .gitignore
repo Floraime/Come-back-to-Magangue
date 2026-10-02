@@ -1,0 +1,7 @@
+# Archivos del sistema
+.DS_Store
+
+# Temporales y controles de calidad
+tmp/
+_qa/
+
