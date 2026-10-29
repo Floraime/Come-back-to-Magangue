@@ -75,12 +75,35 @@ const label = (pair) => t(...pair);
 function header() { const currentPage = document.body.dataset.page; const activeSection = pages[currentPage] ? currentPage : subs[currentPage]?.section; return `<header class="site-header"><div class="header-inner"><a class="brand" href="${href("home")}"><img src="${root}assets/icons/magangue-net-wordmark-transparent.png" alt="Come Back to Magangué"></a><nav class="main-nav" aria-label="${t("Navegación principal","Main navigation")}">${Object.entries(pages).map(([id,p])=>`<a href="${href(id)}"${activeSection === id ? ' aria-current="page"' : ""}>${label(p.nav)}</a>`).join("")}<a href="${href("credits")}"${currentPage === "credits" ? ' aria-current="page"' : ""}>${t("Créditos","Credits")}</a></nav><div class="language-switcher" aria-label="${t("Idioma","Language")}"><button data-language="es" aria-pressed="${language === "es"}">Español</button><button data-language="en" aria-pressed="${language === "en"}">English</button></div></div></header>`; }
 function footer(){ return `<footer class="site-footer"><div class="container footer-main"><nav class="footer-nav" aria-label="${t("Navegación del pie de página","Footer navigation")}">${Object.entries(pages).map(([id,p])=>`<a href="${href(id)}">${label(p.nav)}</a>`).join("")}<a href="${href("credits")}">${t("Créditos","Credits")}</a></nav></div><div class="footer-bottom"><div class="container">© 2026 · Floraime Isamar Ramirez Vilaro</div></div></footer>`; }
 function card(id){const s=subs[id];const actionLabel=t(`Explorar ${label(s.title)}`,`Explore ${label(s.title)}`);return `<article class="feature-card"><img src="${image(s.image)}" alt="${label(s.title)}"><div><span class="category">${label(pages[s.section].title)}</span><h3>${label(s.title)}</h3><p>${label(s.intro)}</p><div class="card-actions"><a class="button" href="${href(id)}" aria-label="${actionLabel}"><span aria-hidden="true">→</span></a></div></div></article>`;}
-function suggestedRouteSection(){return `<section class="route-section"><div class="container route-layout"><div class="route-copy"><p class="eyebrow">${t("Una forma de conectar","One way to connect")}</p><h2>${t("Ruta sugerida","Suggested route")}</h2><p>${t("Un recorrido inicial por río, ciudad y paisaje. Confirma horarios, accesos y condiciones locales antes de salir.","An introductory route through river, city, and landscape. Confirm schedules, access, and local conditions before you go.")}</p><ol class="route-stops">${suggestedRoute.map((stop,index)=>`<li><span>${index + 1}</span><div><strong>${label(stop.title)}</strong><small>${label(stop.note)}</small></div></li>`).join("")}</ol></div><div class="route-map-panel"><div id="route-map" aria-label="${t("Mapa de la ruta sugerida","Suggested route map")}"></div><p>${t("Puntos de referencia mapeados; esta visualización no reemplaza una ruta vial ni indicaciones locales.","Mapped reference points; this visual does not replace a road route or local directions.")}</p></div></div></section>`;}
+function mapStops(id){
+  return id === "home" ? suggestedRoute : subs[id].items.map(([title,note,lat,lng])=>({title,note,coords:[lat,lng]}));
+}
+function mapSection(id){
+  const home = id === "home";
+  const stops = mapStops(id);
+  const title = home ? t("Ruta sugerida","Suggested route") : label(subs[id].title);
+  const provisional = ["river-flavors","traditional-food","heritage","local-life"].includes(id);
+  const intro = home ? t("Un recorrido inicial por río, ciudad y paisaje. Confirma horarios, accesos y condiciones locales antes de salir.","An introductory route through river, city, and landscape. Confirm schedules, access, and local conditions before you go.") : label(subs[id].intro);
+  return `<section class="route-section" id="${home ? "suggested-route" : "locations"}" aria-labelledby="map-heading"><div class="container route-layout"><div class="route-copy"><p class="eyebrow">${t("Explora el mapa","Explore the map")}</p><h2 id="map-heading">${title}</h2><p>${intro}</p>${provisional ? `<p class="map-context">${t("Las ubicaciones son referencias de contexto; no representan establecimientos, anfitriones ni actividades confirmadas. Varias experiencias pueden compartir un punto.","Locations are contextual references, not confirmed venues, hosts, or activities. Several experiences may share one point.")}</p>` : ""}<ol class="route-stops">${stops.map((stop,index)=>`<li><button type="button" class="map-stop" data-map-stop="${index}" aria-controls="${home ? "route-map" : "map"}"><span class="stop-number" aria-hidden="true">${index+1}</span><span class="stop-copy"><strong>${label(stop.title)}</strong><span class="stop-description">${label(stop.note)}</span><span class="stop-action">${t("Ver en el mapa","View on map")}</span></span></button></li>`).join("")}</ol><p class="map-status" role="status" aria-live="polite"></p></div><div class="route-map-panel"><div id="${home ? "route-map" : "map"}" aria-label="${t("Mapa de ","Map of ")}${title}"></div><p>${t("Ubicaciones de referencia. Las líneas solo relacionan puntos en el orden mostrado: no indican vías, distancias ni rutas navegables. Confirma ubicaciones, accesos y condiciones locales antes de salir.","Reference locations. Lines only connect points in the order shown: they do not indicate roads, distances, or navigable routes. Confirm locations, access, and local conditions before setting out.")}</p></div></div></section>`;
+}
+function suggestedRouteSection(){return mapSection("home");}
 function home(){return `<section class="hero"><div class="container hero-content"><p class="eyebrow">${t("Magangué, Bolívar","Magangué, Bolívar")}</p><h1>${t("Algunos lugares se visitan. Otros te hacen volver.","Some places you visit. Some places you come back to.")}</h1><p>${t("Experiencias de río, cocina, cultura y campo para acercarte a Magangué con curiosidad y respeto.","River, cuisine, culture, and countryside experiences to approach Magangué with curiosity and respect.")}</p><div class="hero-actions"><a class="button" href="#sections">${t("Comenzar a explorar","Start exploring")}</a></div></div></section><section id="memorias" class="memory-section"><div class="container memories-layout"><div class="memory-intro"><p class="eyebrow">${t("Voces para volver","Voices for returning")}</p><h2>${t("Memorias de regreso","Memories of return")}</h2><p>${t("El regreso también se vive en los sabores, el río, las conversaciones y los lugares que siguen reuniendo a quienes tienen vínculos con Magangué.","Returning is also lived through flavors, the river, conversations, and places that continue to bring together people connected to Magangué.")}</p><a class="memory-link" href="${href("local-life")}">${t("Explorar memorias","Explore memories")} <span aria-hidden="true">→</span></a></div><article class="memory-card"><img src="${image("river-nature.png")}" alt="${t("Ribera del río Magdalena","Magdalena River riverbank")}"><div><h3>${t("Río y reencuentro","River and reunion")}</h3><p>${t("Un recorrido para reconocer cómo el río sigue conectando paisajes, oficios y recuerdos.","A route to recognize how the river continues to connect landscapes, livelihoods, and memories.")}</p></div></article><article class="memory-card"><img src="${image("traditional-food.png")}" alt="${t("Comida tradicional de Magangué","Traditional Magangué food")}"><div><h3>${t("Sabores que acompañan","Flavors that stay")}</h3><p>${t("Cocina, mesa compartida y saberes locales que convierten una visita en un vínculo.","Cooking, shared tables, and local knowledge that turn a visit into a connection.")}</p></div></article></div></section><section id="sections" class="section section-white"><div class="container"><div class="section-heading"><h2>${t("Elige cómo quieres volver.","Choose how you want to return.")}</h2></div><div class="grid">${Object.values(pages).map(p=>p.children.map(card).join("")).join("")}</div></div></section>${suggestedRouteSection()}`;}
-function sectionPage(id){const p=pages[id];return `<section class="page-intro"><div class="container"><p class="breadcrumb"><a href="${href("home")}">Home</a> / ${label(p.title)}</p><h1>${label(p.title)}</h1><p class="page-lede">${label(p.text)}</p>${p.detail ? `<p class="page-detail">${label(p.detail)}</p>` : ""}</div></section><section class="section"><div class="container"><div class="grid section-page-grid">${p.children.map(card).join("")}</div></div></section>`;}
+function sectionPage(id){const p=pages[id];return `<section class="page-intro"><div class="container"><p class="breadcrumb"><a href="${href("home")}">${t("Inicio","Home")}</a> / ${label(p.title)}</p><h1>${label(p.title)}</h1><p class="page-lede">${label(p.text)}</p>${p.detail ? `<p class="page-detail">${label(p.detail)}</p>` : ""}</div></section><section class="section"><div class="container"><div class="grid section-page-grid">${p.children.map(card).join("")}</div></div></section>`;}
 function sourceNote(key){const source=contentSources[key];if(!source) return "";const prefix=t("Fuente de contexto: ","Context source: ");return source.url?`<p class="experience-source">${prefix}<a href="${source.url}" target="_blank" rel="noopener">${label(source.label)}</a></p>`:`<p class="experience-source">${prefix}${label(source.label)}</p>`;}
-function subPage(id){const s=subs[id];return `<section class="page-intro"><div class="container"><p class="breadcrumb"><a href="${href("home")}">${t("Inicio","Home")}</a> / <a href="${href(s.section)}">${label(pages[s.section].title)}</a> / <span aria-current="page">${label(s.title)}</span></p><h1>${label(s.title)}</h1><p>${label(s.intro)}</p></div></section><section class="section"><div class="container"><div class="experience-grid">${s.items.map(([title,text,lat,lng,itemImage],index)=>`<article class="experience-card"><img src="${image(itemImage || s.image)}" alt="${label(title)}"><div><span class="category">${label(s.title)}</span><h2>${label(title)}</h2><p>${label(text)}</p>${sourceNote(s.sources?.[index])}<div class="card-actions"><a class="button" target="_blank" rel="noopener" href="https://www.openstreetmap.org/?mlat=${lat}&mlon=${lng}#map=15/${lat}/${lng}" aria-label="${t(`Abrir ubicación de ${label(title)}`,`Open location for ${label(title)}`)}">${t("Abrir ubicación","Open location")}</a></div></div></article>`).join("")}</div></div></section><section class="section section-white"><div class="container"><div class="section-heading"><p class="eyebrow">${t("Mapa de referencia","Reference map")}</p><h2>${t("Ubicaciones para orientar la exploración","Locations to guide exploration")}</h2></div><div class="map-panel"><div class="map-copy"><p>${t("Los marcadores son referencias iniciales. Confirma accesos y condiciones con la comunidad o un anfitrión local.","Markers are starting references. Confirm access and conditions with the community or a local host.")}</p></div><div id="map"></div><p class="map-note">OpenFreeMap · OpenMapTiles · © OpenStreetMap contributors</p></div></div></section>`;}
-function credits(){const aiCredits=assetCreditGroups.map(group=>`<li><strong>${label(group.title)}.</strong> <code>${group.files.join(", ")}</code>. OpenAI. (2026). <em>${t("Recursos visuales generados con IA para Come Back to Magangué","AI-generated visual assets for Come Back to Magangué")}</em> [${t("Ilustración y recurso gráfico","Illustration and graphic asset")}]. <a href="https://chatgpt.com/" target="_blank" rel="noopener">ChatGPT</a>.</li>`).join("");return `<section class="page-intro"><div class="container"><p class="eyebrow">${t("Transparencia","Transparency")}</p><h1>${t("Créditos y fuentes","Credits & sources")}</h1><p>${t("Las imágenes, la identidad visual y los borradores de texto de esta versión beta fueron elaborados con asistencia de IA generativa y revisados editorialmente. Las ilustraciones son conceptuales: no constituyen fotografías documentales ni prueban la disponibilidad de una experiencia.","The images, visual identity, and text drafts in this beta version were created with generative-AI assistance and editorially reviewed. The illustrations are conceptual: they are not documentary photographs and do not prove that an experience is available.")}</p></div></section><section class="section"><div class="container credits-content"><h2>${t("Recursos generados con IA","AI-generated resources")}</h2><p>${t("Cada archivo visual utilizado en el sitio se identifica a continuación. Los nombres de archivo permiten rastrear el recurso dentro del proyecto.","Every visual file used by the site is identified below. File names make each asset traceable within the project.")}</p><ul class="credit-list asset-credit-list">${aiCredits}</ul><h2>${t("Fuentes de contenido y verificación","Content and verification sources")}</h2><ul class="credit-list"><li><a href="${contentSources.icultur2023.url}" target="_blank" rel="noopener">Instituto de Cultura y Turismo de Bolívar. (2023). <em>Magangué resuena con las Fiestas de la Virgen de la Candelaria y el V Festival del Bocachico</em>.</a></li><li><a href="${contentSources.icultur2024.url}" target="_blank" rel="noopener">Instituto de Cultura y Turismo de Bolívar. (2024). <em>Magangué es la nueva joya del turismo de la fe en la Región Caribe</em>.</a></li><li><a href="${contentSources.fondo.url}" target="_blank" rel="noopener">Fondo Adaptación. (2020). <em>Comunicado 015-20: Interconexión Yatí–La Bodega</em>.</a></li><li><a href="${contentSources.municipal.url}" target="_blank" rel="noopener">Alcaldía Municipal de Magangué. (2020). <em>Plan de Desarrollo Municipal de Magangué 2020–2023</em>.</a></li><li><a href="${contentSources.registraduria.url}" target="_blank" rel="noopener">Registraduría Nacional del Estado Civil. (2023). <em>Puestos de votación: georreferenciación territorial</em>.</a></li><li><a href="${contentSources.pinalito.url}" target="_blank" rel="noopener">Visor Caribe. (2025). <em>Piñalito se prepara para un Festival de la Patilla inolvidable</em>.</a></li><li><a href="https://openfreemap.org/" target="_blank" rel="noopener">OpenFreeMap</a>; <a href="https://openmaptiles.org/" target="_blank" rel="noopener">OpenMapTiles</a>; y <a href="${contentSources.map.url}" target="_blank" rel="noopener">OpenStreetMap contributors</a>. ${t("Base cartográfica y atribución.","Map base and attribution.")}</li></ul><p class="verification-note">${t("Las fichas que requieren anfitrión, cocinera, emprendimiento o programación anual no se anuncian como reserva: deben confirmarse directamente con las personas u organizaciones responsables.","Entries requiring a host, cook, local enterprise, or annual programme are not advertised as bookings: they must be confirmed directly with the responsible people or organizations.")}</p></div></section>`;}
+function subPage(id){const s=subs[id];return `<section class="page-intro"><div class="container"><p class="breadcrumb"><a href="${href("home")}">${t("Inicio","Home")}</a> / <a href="${href(s.section)}">${label(pages[s.section].title)}</a> / <span aria-current="page">${label(s.title)}</span></p><h1>${label(s.title)}</h1><p>${label(s.intro)}</p></div></section><section class="section"><div class="container"><div class="experience-grid">${s.items.map(([title,text,lat,lng,itemImage],index)=>`<article class="experience-card"><img src="${image(itemImage || s.image)}" alt="${label(title)}"><div><span class="category">${label(s.title)}</span><h2>${label(title)}</h2><p>${label(text)}</p>${sourceNote(s.sources?.[index])}<div class="card-actions"><a class="button" target="_blank" rel="noopener" href="https://www.openstreetmap.org/?mlat=${lat}&mlon=${lng}#map=15/${lat}/${lng}" aria-label="${t(`Abrir ubicación de ${label(title)}`,`Open location for ${label(title)}`)}" title="${t(`Ver ${label(title)} en el mapa`,`View ${label(title)} on the map`)}">${t("Abrir ubicación","Open location")}</a></div></div></article>`).join("")}</div></div></section>${mapSection(id)}`;}
+function credits(){const assetInventory=assetCreditGroups.map(group=>`<li><strong>${label(group.title)}.</strong> <code>${group.files.join(", ")}</code></li>`).join("");const references=[
+  [`Alcaldía Municipal de Magangué. (2020). <em>Plan de Desarrollo Municipal de Magangué 2020–2023</em>.`,contentSources.municipal.url],
+  [`Fondo Adaptación. (2020). <em>Comunicado 015-20: Interconexión Yatí–La Bodega</em>.`,contentSources.fondo.url],
+  [`Instituto de Cultura y Turismo de Bolívar. (2023). <em>Magangué resuena con las Fiestas de la Virgen de la Candelaria y el V Festival del Bocachico</em>.`,contentSources.icultur2023.url],
+  [`Instituto de Cultura y Turismo de Bolívar. (2024). <em>Magangué es la nueva joya del turismo de la fe en la Región Caribe</em>.`,contentSources.icultur2024.url],
+  [`MapLibre. (s. f.). <em>MapLibre GL JS</em> [Biblioteca de JavaScript].`,"https://maplibre.org/maplibre-gl-js/docs/"],
+  [`OpenAI. (2026). <em>Recursos visuales y borradores de texto para Come Back to Magangué</em> [Imágenes generadas con IA y modelo de lenguaje]. ChatGPT.`,"https://chatgpt.com/"],
+  [`OpenFreeMap. (s. f.). <em>OpenFreeMap</em>.`,"https://openfreemap.org/"],
+  [`OpenMapTiles. (s. f.). <em>OpenMapTiles</em>.`,"https://openmaptiles.org/"],
+  [`OpenStreetMap contributors. (s. f.). <em>OpenStreetMap</em>.`,contentSources.map.url],
+  [`Registraduría Nacional del Estado Civil. (2023). <em>Puestos de votación: georreferenciación territorial</em>.`,contentSources.registraduria.url],
+  [`Visor Caribe. (2025). <em>Piñalito se prepara para un Festival de la Patilla inolvidable</em>.`,contentSources.pinalito.url]
+];const referenceList=references.map(([citation,url])=>`<p class="apa-reference">${citation} <a href="${url}" target="_blank" rel="noopener">${url}</a></p>`).join("");return `<section class="page-intro"><div class="container"><p class="eyebrow">${t("Transparencia","Transparency")}</p><h1>${t("Créditos y referencias","Credits & references")}</h1><p>${t("Las imágenes, la identidad visual y los borradores de texto de esta versión beta fueron elaborados con asistencia de IA generativa y revisados editorialmente. Las ilustraciones son conceptuales: no constituyen fotografías documentales ni prueban la disponibilidad de una experiencia.","The images, visual identity, and text drafts in this beta version were created with generative-AI assistance and editorially reviewed. The illustrations are conceptual: they are not documentary photographs and do not prove that an experience is available.")}</p></div></section><section class="section"><div class="container credits-content"><h2>${t("Herramientas de desarrollo","Development tools")}</h2><ul class="development-tools"><li>${t("HTML, CSS y JavaScript para la estructura, el diseño responsive y las interacciones bilingües.","HTML, CSS, and JavaScript for the structure, responsive design, and bilingual interactions.")}</li><li><a href="https://maplibre.org/maplibre-gl-js/docs/" target="_blank" rel="noopener">MapLibre GL JS 5.6.0</a>: ${t("biblioteca que muestra los mapas interactivos, los marcadores numerados y las ventanas de información.","the library that displays interactive maps, numbered markers, and information popups.")}</li><li><a href="https://openfreemap.org/" target="_blank" rel="noopener">OpenFreeMap</a>: ${t("cartografía con el estilo Liberty, basada en OpenMapTiles y datos de OpenStreetMap.","cartography using the Liberty style, based on OpenMapTiles and OpenStreetMap data.")}</li><li>GitHub Pages: ${t("publicación de la aplicación web.","hosting for the web application.")}</li></ul><h2>${t("Inventario de recursos generados con IA","AI-generated resource inventory")}</h2><p>${t("Los siguientes archivos están asociados a la referencia de OpenAI incluida al final de esta página. Los nombres permiten rastrear cada recurso dentro del proyecto.","The following files are associated with the OpenAI reference included at the end of this page. The names make each resource traceable within the project.")}</p><ul class="asset-inventory">${assetInventory}</ul><h2>${t("Referencias","References")}</h2><div class="apa-references">${referenceList}</div><p class="verification-note">${t("Las fichas que requieren anfitrión, cocinera, emprendimiento o programación anual no se anuncian como reserva: deben confirmarse directamente con las personas u organizaciones responsables.","Entries requiring a host, cook, local enterprise, or annual programme are not advertised as bookings: they must be confirmed directly with the responsible people or organizations.")}</p></div></section>`;}
 function render(){const id=document.body.dataset.page;let content=id==="home"?home():id==="credits"?credits():pages[id]?sectionPage(id):subPage(id);document.getElementById("app").innerHTML=`${header()}<main>${content}</main>${footer()}`;document.documentElement.lang=language;document.querySelectorAll("[data-language]").forEach(b=>b.addEventListener("click",()=>{language=b.dataset.language;localStorage.setItem("magangue-language",language);render();initializeMaps();}));}
 let mapLibraryPromise;
 const mapStyle = "https://tiles.openfreemap.org/styles/liberty";
@@ -106,45 +129,69 @@ function mapMarker(number,title,note){
   return new maplibregl.Marker({element,anchor:"center"}).setPopup(new maplibregl.Popup({offset:20}).setHTML(`<strong>${number}. ${title}</strong><br>${note}`));
 }
 
+let activeMap;
+let mapGeneration = 0;
 function initializeMaps(){
+  const generation = ++mapGeneration;
+  if(activeMap){ activeMap.remove(); activeMap = null; }
   const id = document.body.dataset.page;
   if(!subs[id] && id !== "home") return;
+  const controls = [...document.querySelectorAll("[data-map-stop]")];
+  const status = document.querySelector(".map-status");
+  let selectStop;
+  controls.forEach(control=>control.addEventListener("click",event=>{
+    if(selectStop){ event.preventDefault(); selectStop(Number(control.dataset.mapStop)); }
+    else status.textContent = t("El mapa está cargando. Inténtalo en unos segundos.","The map is loading. Please try again in a few seconds.");
+  }));
   loadMapLibrary().then(()=>{
-    if(document.body.dataset.page !== id) return;
-    if(subs[id]){
-      const target = document.getElementById("map");
-      if(!target || target.dataset.mapReady) return;
-      target.dataset.mapReady = "true";
-      const items = subs[id].items;
-      const map = new maplibregl.Map({container:target,style:mapStyle,center:[items[0][3],items[0][2]],zoom:11});
-      map.addControl(new maplibregl.NavigationControl(),"top-left");
-      const bounds = new maplibregl.LngLatBounds();
-      items.forEach(([title,text,lat,lng],index)=>{
-        mapMarker(index + 1,label(title),label(text)).setLngLat([lng,lat]).addTo(map);
-        bounds.extend([lng,lat]);
+    if(generation !== mapGeneration) return;
+    const target = document.getElementById(id === "home" ? "route-map" : "map");
+    if(!target) return;
+    const stops = mapStops(id);
+    const map = activeMap = new maplibregl.Map({container:target,style:mapStyle,center:[stops[0].coords[1],stops[0].coords[0]],zoom:11,scrollZoom:false,locale:{"NavigationControl.ZoomIn":t("Acercar","Zoom in"),"NavigationControl.ZoomOut":t("Alejar","Zoom out"),"NavigationControl.ResetBearing":t("Orientar al norte","Reset bearing to north"),"Map.Title":t("Mapa","Map"),"Popup.Close":t("Cerrar","Close"),"AttributionControl.ToggleAttribution":t("Mostrar atribuciones","Toggle attribution")}});
+    map.addControl(new maplibregl.NavigationControl(),"top-left");
+    const groups = new Map();
+    stops.forEach((stop,index)=>{
+      const key = stop.coords.join(",");
+      if(!groups.has(key)) groups.set(key,[]);
+      groups.get(key).push({stop,index});
+    });
+    const bounds = new maplibregl.LngLatBounds();
+    const markers = [];
+    groups.forEach(group=>{
+      const coords = [group[0].stop.coords[1],group[0].stop.coords[0]];
+      const numbers = group.map(entry=>entry.index+1).join(" / ");
+      const marker = mapMarker(numbers,group.map(entry=>label(entry.stop.title)).join(" · "),"").setLngLat(coords).addTo(map);
+      const popup = document.createElement("div");
+      group.forEach(({stop,index})=>{
+        const heading = document.createElement("strong"); heading.textContent = `${index+1}. ${label(stop.title)}`;
+        const description = document.createElement("p"); description.textContent = label(stop.note);
+        popup.append(heading,description);
+        markers[index] = marker;
       });
-      map.fitBounds(bounds,{padding:48,maxZoom:12,duration:0});
-    }
-    if(id === "home"){
-      const target = document.getElementById("route-map");
-      if(!target || target.dataset.mapReady) return;
-      target.dataset.mapReady = "true";
-      const map = new maplibregl.Map({container:target,style:mapStyle,center:[-74.744,9.24],zoom:11,scrollZoom:false});
-      map.addControl(new maplibregl.NavigationControl(),"top-left");
-      const bounds = new maplibregl.LngLatBounds();
-      suggestedRoute.forEach((stop,index)=>{
-        mapMarker(index + 1,label(stop.title),label(stop.note)).setLngLat([stop.coords[1],stop.coords[0]]).addTo(map);
-        bounds.extend([stop.coords[1],stop.coords[0]]);
-      });
-      map.on("load",()=>{
-        map.addSource("suggested-route",{type:"geojson",data:{type:"Feature",properties:{},geometry:{type:"LineString",coordinates:suggestedRoute.map(stop=>[stop.coords[1],stop.coords[0]])}}});
-        map.addLayer({id:"suggested-route",type:"line",source:"suggested-route",paint:{"line-color":"#167a45","line-width":3,"line-opacity":.8}});
-      });
-      map.fitBounds(bounds,{padding:42,maxZoom:11,duration:0});
-    }
+      marker.getPopup().setDOMContent(popup);
+      marker.getElement().classList.toggle("map-marker-group",group.length > 1);
+      bounds.extend(coords);
+    });
+    selectStop = index=>{
+      const stop = stops[index];
+      markers.forEach(marker=>{if(marker.getPopup().isOpen()) marker.getPopup().remove();});
+      map.easeTo({center:[stop.coords[1],stop.coords[0]],zoom:Math.max(map.getZoom(),13),duration:window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 450});
+      markers[index].togglePopup();
+      target.scrollIntoView({block:"center",behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth"});
+      controls.forEach(control=>control.classList.toggle("is-selected",Number(control.dataset.mapStop)===index));
+      status.textContent = t(`Mostrando: ${label(stop.title)}.`,`Showing: ${label(stop.title)}.`);
+    };
+    map.on("load",()=>{
+      if(["home","river-nature","landmarks","towns"].includes(id) && groups.size > 1){
+        map.addSource("reference-route",{type:"geojson",data:{type:"Feature",properties:{},geometry:{type:"LineString",coordinates:stops.map(stop=>[stop.coords[1],stop.coords[0]])}}});
+        map.addLayer({id:"reference-route",type:"line",source:"reference-route",paint:{"line-color":"#167a45","line-width":3,"line-opacity":.8}});
+      }
+    });
+    map.fitBounds(bounds,{padding:48,maxZoom:12,duration:0});
   }).catch(()=>{
-    const target = document.getElementById(subs[id] ? "map" : "route-map");
-    if(target) target.textContent = t("El mapa no pudo cargarse. Inténtalo de nuevo más tarde.","The map could not load. Please try again later.");
+    if(generation !== mapGeneration) return;
+    status.textContent = t("El mapa no pudo cargarse. Puedes consultar los nombres y descripciones en la lista.","The map could not load. You can still read the names and descriptions in the list.");
   });
 }
 
